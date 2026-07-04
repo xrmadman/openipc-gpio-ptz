@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Run homing in the background during boot so the camera does not block startup.
+if [ -x /usr/bin/gpio-motors ]; then
+  nohup sh -c '/usr/bin/gpio-motors --home; /usr/bin/gpio-motors --off' \
+    >/tmp/gpio-motors-home.log 2>&1 &
+fi

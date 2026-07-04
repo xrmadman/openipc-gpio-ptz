@@ -1,0 +1,55 @@
+# gpio-motors tuning
+#
+# Speed values are per motor phase in microseconds.
+# Lower delay = faster motor movement, but more risk of chatter or lost steps.
+# Higher delay = slower movement, but more torque/reliability.
+# If the motor chatters, stalls, or loses position, raise speed9/speed10 first.
+
+# half = OEM-style 8-phase half stepping. Smoother, but slower through sysfs GPIO.
+# wave = script-style one-coil stepping. Faster and closer to the old shell script.
+step_mode=wave
+
+# Flip these only when a camera's motor wiring runs opposite to the normal coordinate
+# system. 0 = normal wiring, 1 = reverse that motor axis.
+# Driveway currently needs both set to 1.
+pan_motor_invert=0
+tilt_motor_invert=0
+
+# Delay for command speed 1 through 10. The proxy currently sends speed 10.
+speed1_delay_us=1800
+speed2_delay_us=1500
+speed3_delay_us=1200
+speed4_delay_us=950
+speed5_delay_us=750
+speed6_delay_us=550
+speed7_delay_us=400
+speed8_delay_us=160
+speed9_delay_us=70
+speed10_delay_us=25
+
+# Homing has two parts.
+# sweep: drive into the hard stops to establish zero.
+# center: move from zero to the configured center position.
+# Lower values make homing faster. Higher values make homing gentler.
+home_sweep_delay_us=60
+home_center_delay_us=75
+
+# Ramping smooths starts/stops.
+# ramp_enabled=0 gives maximum speed but can be harsher and lose steps.
+# Larger ramp_min/max values spend more of the move accelerating/decelerating.
+ramp_enabled=1
+ramp_min_steps=8
+ramp_max_steps=40
+ramp_slow_multiplier=3
+# Minimum slow delay during ramping. Higher is gentler; lower is faster.
+ramp_min_slow_delay_us=350
+
+# Save current X/Y every N completed logical steps while moving.
+# 10 is a practical balance for these cameras: frequent enough to reduce drift
+# after an interrupted command, without making long moves too slow for run.cgi.
+# 0 restores old behavior: save only at forced checkpoints/end of move.
+state_save_interval_steps=10
+
+# If a previous motor process died and left /tmp/gpio-motors.lock behind,
+# treat the lock as stale after this many seconds and clear it.
+lock_stale_seconds=30

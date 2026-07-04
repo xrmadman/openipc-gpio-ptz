@@ -1,0 +1,26 @@
+# GPIO settings copied from the living room camera on 2026-06-24.
+# These are intended as known-good reference values for the same camera model.
+
+audio:
+  # Speaker GPIO. speakerPinInvert=false means high/active polarity is normal.
+  speakerPin: 64
+  speakerPinInvert: false
+  outputEnabled: true
+  outputVolume: 52
+
+nightMode:
+  # IR cut filter. irCutSingleInvert=true means the IR cut output polarity is inverted.
+  irCutPin1: 2
+  irCutPin2: 1
+  irCutSingleInvert: true
+
+  # Camera light/backlight GPIO.
+  backlightPin: 63
+
+  # Light sensor GPIO. lightSensorInvert=true means the sensor reads opposite polarity.
+  lightSensorPin: 62
+  lightSensorInvert: true
+
+  # Let Majestic watch the light sensor and switch night mode automatically.
+  lightMonitor: true
+  monitorDelay: 0

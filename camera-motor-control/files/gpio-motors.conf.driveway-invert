@@ -1,0 +1,46 @@
+# gpio-motors tuning
+#
+# Values are per motor phase in microseconds. Lower is faster.
+# If the motor chatters, stalls, or loses position, raise speed9/speed10 first.
+
+# half = OEM-style 8-phase half stepping, smoother but slower through sysfs GPIO.
+# wave = script-style one-coil stepping, much faster and closer to the old script.
+step_mode=wave
+
+# Driveway motor wiring is reversed relative to the normal coordinate system.
+pan_motor_invert=1
+tilt_motor_invert=1
+
+speed1_delay_us=1800
+speed2_delay_us=1500
+speed3_delay_us=1200
+speed4_delay_us=950
+speed5_delay_us=750
+speed6_delay_us=550
+speed7_delay_us=400
+speed8_delay_us=160
+speed9_delay_us=70
+speed10_delay_us=25
+
+# Homing has two parts:
+# - sweep: drive into the hard stops to establish zero
+# - center: move from zero to the configured center position
+home_sweep_delay_us=60
+home_center_delay_us=75
+
+# Ramping smooths starts/stops. Disable with ramp_enabled=0 for maximum speed.
+ramp_enabled=1
+ramp_min_steps=8
+ramp_max_steps=40
+ramp_slow_multiplier=3
+ramp_min_slow_delay_us=350
+
+# Save current X/Y every N completed logical steps while moving.
+# 10 is a practical balance for these cameras: frequent enough to reduce drift
+# after an interrupted command, without making long moves too slow for run.cgi.
+# 0 restores old behavior: save only at forced checkpoints/end of move.
+state_save_interval_steps=10
+
+# If a previous motor process died and left /tmp/gpio-motors.lock behind,
+# treat the lock as stale after this many seconds and clear it.
+lock_stale_seconds=30

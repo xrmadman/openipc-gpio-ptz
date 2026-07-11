@@ -8,7 +8,7 @@ boot-time homing script onto an OpenIPC camera over SSH.
 - `files/gpio-motors`: ARM binary installed to `/usr/bin/gpio-motors`.
 - `files/gpio-motors.conf.example`: documented helper config installed to `/etc/gpio-motors.conf`.
 - `files/S99gpio-motors-home`: optional boot script installed to `/etc/init.d/S99gpio-motors-home`.
-- `files/majestic-gpio.yaml`: GPIO reference copied from the living room camera.
+- `files/majestic-gpio.yaml`: reference Majestic GPIO settings for camera hardware controls.
 - `install-camera.sh`: SSH/SCP installer.
 
 The installer also tries to enable OpenIPC/Majestic's GPIO motor UI flag with:
@@ -35,7 +35,7 @@ pan_motor_invert=1
 tilt_motor_invert=1
 ```
 
-To also apply the living-room Majestic GPIO settings:
+To also apply the packaged Majestic GPIO settings:
 
 ```sh
 APPLY_MAJESTIC_GPIO=1 ./install-camera.sh CAMERA_IP root

@@ -1,4 +1,4 @@
-# GPIO settings copied from the living room camera on 2026-06-24.
+# Reference Majestic GPIO settings for camera hardware controls.
 # These are intended as known-good reference values for the same camera model.
 
 audio:

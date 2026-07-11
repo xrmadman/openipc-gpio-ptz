@@ -181,7 +181,7 @@ static int delay_for_speed(int speed) {
 static void usage(void) {
     puts("Usage:");
     puts("  gpio-motors X Y SPEED");
-    puts("  gpio-motors --home");
+    puts("  gpio-motors --home  # calibrate, then return to parking preset if saved");
     puts("  gpio-motors --center [SPEED]");
     puts("  gpio-motors --status");
     puts("  gpio-motors --absolute X Y [SPEED]");
@@ -524,6 +524,65 @@ static int move_relative(int dx, int dy, int speed) {
     return 0;
 }
 
+static void move_locked_from_to(int *x, int *y, int target_x, int target_y, int delay) {
+    int dx = clamp(target_x, PAN_MIN, PAN_MAX) - *x;
+    int dy = clamp(target_y, TILT_MIN, TILT_MAX) - *y;
+    int pan_steps = abs(dx);
+    int tilt_steps = abs(dy);
+    int total = pan_steps > tilt_steps ? pan_steps : tilt_steps;
+    int pan_err = 0, tilt_err = 0;
+
+    if (total <= 0) return;
+
+    const int *pan_dir = pan_dir_for_delta(dx);
+    const int *tilt_dir = tilt_dir_for_delta(dy);
+
+    for (int step = 0; step < total; step++) {
+        int this_delay = ramp_delay(delay, step, total);
+        pan_err += pan_steps;
+        tilt_err += tilt_steps;
+
+        if (pan_err >= total && pan_steps > 0) {
+            step_axis(pan_dir, this_delay);
+            *x += dx >= 0 ? 1 : -1;
+            note_position(*x, *y, false);
+            pan_err -= total;
+        }
+        if (tilt_err >= total && tilt_steps > 0) {
+            step_axis(tilt_dir, this_delay);
+            *y += dy >= 0 ? 1 : -1;
+            note_position(*x, *y, false);
+            tilt_err -= total;
+        }
+    }
+}
+
+static int read_preset_xy(const char *arg, int *x, int *y) {
+    const char *name = resolve_preset_name(arg);
+    char path[PATH_MAX];
+    char key[16];
+    int val;
+    bool have_x = false, have_y = false;
+
+    if (!*name) return 0;
+    snprintf(path, sizeof(path), "%s/%s", PRESET_DIR, name);
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+
+    while (fscanf(f, "%15[^=]=%d\n", key, &val) == 2) {
+        if (strcmp(key, "X") == 0) {
+            *x = clamp(val, PAN_MIN, PAN_MAX);
+            have_x = true;
+        }
+        if (strcmp(key, "Y") == 0) {
+            *y = clamp(val, TILT_MIN, TILT_MAX);
+            have_y = true;
+        }
+    }
+    fclose(f);
+    return have_x && have_y;
+}
+
 static int go_absolute(int target_x, int target_y, int speed) {
     int x, y;
     load_state(&x, &y);
@@ -552,6 +611,12 @@ static int home(void) {
         y++;
         note_position(x, y, false);
     }
+
+    int parking_x = x, parking_y = y;
+    if (read_preset_xy("parking", &parking_x, &parking_y)) {
+        move_locked_from_to(&x, &y, parking_x, parking_y, delay_for_speed(10));
+    }
+
     note_position(x, y, true);
     lock_release();
     status();
@@ -581,26 +646,15 @@ static int preset_set(const char *arg) {
 }
 
 static int preset_go(const char *arg, int speed) {
-    const char *name = resolve_preset_name(arg);
-    char path[PATH_MAX];
     int x = PAN_CENTER, y = TILT_CENTER;
-    if (!*name) {
+    if (!*resolve_preset_name(arg)) {
         fprintf(stderr, "missing preset number\n");
         return 1;
     }
-    snprintf(path, sizeof(path), "%s/%s", PRESET_DIR, name);
-    FILE *f = fopen(path, "r");
-    if (!f) {
-        fprintf(stderr, "preset %s not found\n", preset_display_name(name));
+    if (!read_preset_xy(arg, &x, &y)) {
+        fprintf(stderr, "preset %s not found\n", preset_display_name(resolve_preset_name(arg)));
         return 1;
     }
-    char key[16];
-    int val;
-    while (fscanf(f, "%15[^=]=%d\n", key, &val) == 2) {
-        if (strcmp(key, "X") == 0) x = val;
-        if (strcmp(key, "Y") == 0) y = val;
-    }
-    fclose(f);
     return go_absolute(x, y, speed);
 }
 

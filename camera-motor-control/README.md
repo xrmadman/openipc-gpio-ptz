@@ -52,7 +52,8 @@ RUN_HOME=1 ./install-camera.sh CAMERA_IP root
 Run these on the camera over SSH:
 
 ```sh
-# Trigger a homing calibration.
+# Trigger a homing calibration. If a parking preset exists, the camera
+# automatically returns to parking after calibration completes.
 gpio-motors --home
 
 # Show current saved position and whether the motors are moving.
